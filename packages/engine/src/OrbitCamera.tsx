@@ -133,6 +133,8 @@ export const cameraZoomForViewport = (
 interface OrbitCameraProps {
   viewKey?: string;
   locked?: boolean;
+  /** Idle wall display: return to the remembered view and slowly turn around it. */
+  ambient?: boolean;
   viewActions?: React.RefObject<OrbitViewActions | null>;
   controlsRef?: Ref<OrbitControlsImpl>;
   floor: FloorSpec;
@@ -153,6 +155,7 @@ export function OrbitCamera(props: OrbitCameraProps) {
 function OrbitCameraRig({
   viewKey,
   locked = false,
+  ambient = false,
   viewActions,
   showRoof = false,
   controlsRef,
@@ -313,9 +316,9 @@ function OrbitCameraRig({
     };
   }, [viewActions, defaultFraming, interruptNavigation, save]);
   const overview = useEffectEvent(getOverviewPose);
-  useEffect(() => {
+  const restoreOverview = useEffectEvent(() => {
     const controls = orbitRef.current;
-    if (!locked || !controls) return;
+    if (!controls) return;
     interruptRoomFlight.current?.();
     manual.current = false;
     controls.enableDamping = false;
@@ -327,7 +330,23 @@ function OrbitCameraRig({
     (controls.object as ThreeOrthographicCamera).updateProjectionMatrix();
     controls.update();
     controls.enableDamping = true;
+  });
+  const isLocked = useEffectEvent(() => locked);
+  useEffect(() => {
+    if (locked) restoreOverview();
   }, [locked]);
+  useEffect(() => {
+    const controls = orbitRef.current;
+    if (!ambient || !controls) return;
+    restoreOverview();
+    // The turn is not manual, so it never overwrites the remembered view.
+    controls.autoRotate = !reducedMotion;
+    controls.autoRotateSpeed = 0.35;
+    return () => {
+      controls.autoRotate = false;
+      if (isLocked()) restoreOverview();
+    };
+  }, [ambient, reducedMotion]);
   const previousViewport = useRef({ width, height });
   useEffect(() => {
     const previous = previousViewport.current;

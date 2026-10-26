@@ -1,4 +1,5 @@
 import { useDashboardOrbitView } from "./navigation/orbit-view";
+import { useDashboardWallDisplay } from "./navigation/wall-display";
 import { useWeatherController } from "./weather/useWeatherController";
 import { WeatherScene } from "./weather/WeatherScene";
 import { deriveSolarLighting } from "./lighting";
@@ -165,6 +166,14 @@ export function ValidatedDashboardView(props: Parameters<typeof useDashboardCont
     pendingHaActions,
   } = dashboard;
   const orbitView = useDashboardOrbitView(manifest.home.id, floor.id);
+  const wallDisplay = useDashboardWallDisplay({
+    home: manifest.home.id,
+    paused: walkMode || Boolean(walkthrough) || setupOpen || mappingOpen,
+    returnHome: () => {
+      closeCameraViewer();
+      goHome();
+    },
+  });
   const equippedTool =
     walkMode && !walkthrough
       ? props.walkTools?.find((tool) => tool.id === equippedToolId)
@@ -211,7 +220,7 @@ export function ValidatedDashboardView(props: Parameters<typeof useDashboardCont
       {(liveMediaByEntityId) => (
         <main
           ref={shellRef}
-          className={`cabane-shell mode-${mode} ${mappingOpen ? "mapping-open" : ""} ${setupOpen ? "setup-surface-open" : ""} ${deviceOverlay ? "device-overlay-open" : ""}`}
+          className={`cabane-shell mode-${mode} ${mappingOpen ? "mapping-open" : ""} ${setupOpen ? "setup-surface-open" : ""} ${deviceOverlay ? "device-overlay-open" : ""} ${wallDisplay.menu.enabled && nightLighting ? "wall-display-night" : ""}`}
           style={
             {
               "--home-accent": manifest.home.palette.accent,
@@ -319,6 +328,7 @@ export function ValidatedDashboardView(props: Parameters<typeof useDashboardCont
                     ) : (
                       <OrbitCamera
                         {...orbitView.cameraProps}
+                        ambient={wallDisplay.ambient}
                         showRoof={wholeBuilding}
                         elevation={elevation}
                         buildingFloors={cameraFloors}
@@ -660,6 +670,7 @@ export function ValidatedDashboardView(props: Parameters<typeof useDashboardCont
           {!walkthrough && (
             <SceneActionBar
               {...orbitView.menuProps}
+              wallDisplay={wallDisplay.menu}
               weather={{
                 preview: weather.preview,
                 status: weather.live.status,
