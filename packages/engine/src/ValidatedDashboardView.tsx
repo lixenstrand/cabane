@@ -166,7 +166,7 @@ export function ValidatedDashboardView(props: Parameters<typeof useDashboardCont
     pendingHaActions,
   } = dashboard;
   const orbitView = useDashboardOrbitView(manifest.home.id, floor.id);
-  const wallDisplay = useDashboardWallDisplay({
+  const { ambient, menu: wallDisplayMenu } = useDashboardWallDisplay({
     home: manifest.home.id,
     paused: walkMode || Boolean(walkthrough) || setupOpen || mappingOpen,
     returnHome: () => {
@@ -220,7 +220,7 @@ export function ValidatedDashboardView(props: Parameters<typeof useDashboardCont
       {(liveMediaByEntityId) => (
         <main
           ref={shellRef}
-          className={`cabane-shell mode-${mode} ${mappingOpen ? "mapping-open" : ""} ${setupOpen ? "setup-surface-open" : ""} ${deviceOverlay ? "device-overlay-open" : ""} ${wallDisplay.menu.enabled && nightLighting ? "wall-display-night" : ""}`}
+          className={`cabane-shell mode-${mode} ${mappingOpen ? "mapping-open" : ""} ${setupOpen ? "setup-surface-open" : ""} ${deviceOverlay ? "device-overlay-open" : ""} ${wallDisplayMenu.enabled && nightLighting ? "wall-display-night" : ""}`}
           style={
             {
               "--home-accent": manifest.home.palette.accent,
@@ -277,7 +277,7 @@ export function ValidatedDashboardView(props: Parameters<typeof useDashboardCont
                 events={connectedCanvasEvents}
                 shadows="percentage"
                 dpr={canvasDpr}
-                frameloop={!documentVisible ? "never" : walkMode ? "always" : "demand"}
+                frameloop={!documentVisible ? "never" : walkMode || ambient ? "always" : "demand"}
                 gl={{ antialias: quality.antialias }}
               >
                 <RoomHoverProvider scope={`${floor.id}-${mode}`}>
@@ -328,7 +328,7 @@ export function ValidatedDashboardView(props: Parameters<typeof useDashboardCont
                     ) : (
                       <OrbitCamera
                         {...orbitView.cameraProps}
-                        ambient={wallDisplay.ambient}
+                        ambient={ambient}
                         showRoof={wholeBuilding}
                         elevation={elevation}
                         buildingFloors={cameraFloors}
@@ -670,7 +670,7 @@ export function ValidatedDashboardView(props: Parameters<typeof useDashboardCont
           {!walkthrough && (
             <SceneActionBar
               {...orbitView.menuProps}
-              wallDisplay={wallDisplay.menu}
+              wallDisplay={wallDisplayMenu}
               weather={{
                 preview: weather.preview,
                 status: weather.live.status,
