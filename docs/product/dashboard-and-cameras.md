@@ -47,6 +47,11 @@ unavailable lights and other devices keep their existing control-sheet behavior.
 The same gestures control indoor and outdoor demo lights through the normal
 in-memory runtime. Walk and draft Explore retain their existing interactions.
 
+Devices outside every room (driveway, garden, outdoor units) behave like room
+devices: tapping one in Orbit, or activating it in Walk, opens its device panel
+in the floor's **Outside rooms** group, and outdoor light emitters follow their
+mapped entity's power, brightness and color.
+
 Interactive Orbit floors and wall faces use gently subdued base colors. Selecting
 a room lifts its finishes and softens the others, without altering device lighting,
 rebuilding geometry or adding render passes. Wall faces are associated with rooms

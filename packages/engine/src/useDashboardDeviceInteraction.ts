@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useCabaneDom } from "./CabaneDom";
 import { collectBindingSlots } from "./binding-slot-descriptors";
+import { deviceMappingRooms } from "./outside-room-devices";
 import { useDashboardWalk } from "./useDashboardWalk";
 
 import { resolveDeviceModelDefinition } from "./devices";
@@ -187,7 +188,8 @@ export function useDashboardDeviceInteraction({
       const openingDescriptor = collectBindingSlots(manifest).find(
         (descriptor) => descriptor.kind === "opening-cover" && descriptor.openingId === target.id,
       );
-      const room = floor.rooms.find(
+      // Devices outside every room live in the floor's outside-rooms group.
+      const room = deviceMappingRooms(manifest, floor.id).find(
         (candidate) =>
           openingDescriptor?.roomIds.includes(candidate.id) ||
           candidate.devices.some(
@@ -225,7 +227,7 @@ export function useDashboardDeviceInteraction({
       walkMode,
       equippedToolId,
       manifest,
-      floor.rooms,
+      floor.id,
       setSelectedRoomId,
       setSelectedDeviceId,
       setDevicePanelRoomId,
@@ -245,7 +247,7 @@ export function useDashboardDeviceInteraction({
       if (dom.root.pointerLockElement) document.exitPointerLock();
       return;
     }
-    const room = floor.rooms.find((candidate) =>
+    const room = deviceMappingRooms(manifest, floor.id).find((candidate) =>
       candidate.devices.some((device) => device.id === walkDeviceTarget.id),
     );
     if (!room) return;
@@ -254,7 +256,8 @@ export function useDashboardDeviceInteraction({
   }, [
     walkDeviceTarget,
     floor.openings,
-    floor.rooms,
+    floor.id,
+    manifest,
     setWalkDeviceTarget,
     openDevicePanel,
     handleExtensionInteraction,

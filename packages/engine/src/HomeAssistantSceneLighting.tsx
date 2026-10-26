@@ -15,6 +15,7 @@ import {
 } from "./geometry";
 import { resolveItemTransform, type SceneItemSpec } from "./home-project";
 import { lightBrightnessRatio, lightColorForSnapshot } from "./home-assistant-controls";
+import { outsideRoomsGroupId } from "./outside-room-devices";
 import type { DeviceModelRegistry, FloorSpec, ResolvedHomeBindings, RoomSpec } from "./types";
 
 const defaultRoomLight = (room: RoomSpec, floor: FloorSpec) => {
@@ -148,9 +149,10 @@ export function HomeAssistantSceneLighting({
   const nightLighting = useContext(SceneNightContext);
   if (!enabled) return <group name="home-assistant-scene-lighting" />;
   // Bindings cover the whole building; fallback emitters belong only to this floor.
-  const resolvedDevices = floor.rooms.flatMap(
-    (room) => resolvedBindings.rooms[room.id]?.devices ?? [],
-  );
+  const resolvedDevices = [
+    ...floor.rooms.map((room) => room.id),
+    outsideRoomsGroupId(floor.id),
+  ].flatMap((roomId) => resolvedBindings.rooms[roomId]?.devices ?? []);
   const resolvedById = new Map(resolvedDevices.map((device) => [device.slot.id, device]));
   // Scene items exist independently of room assignment and HA connectivity.
   const deviceItems = sceneItems.filter((item) => item.kind === "device");

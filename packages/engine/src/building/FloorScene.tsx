@@ -1,5 +1,6 @@
 import { ArchitecturalOutdoorPlatforms, floorSlabPolygons } from "../outdoor-platforms";
 import { ArchitecturalHedges } from "../hedges";
+import { outsideRoomsGroupId } from "../outside-room-devices";
 export type FloorSceneProps = {
   sourceFloor: HomeManifest["floors"][number];
   below?: HomeManifest["floors"][number] | undefined;
@@ -251,7 +252,7 @@ export const FloorScene = memo(function FloorScene({
               deviceModels={declarativeDeviceModels}
               resolvedDevice={resolvedDeviceById[item.id]}
               entityStatesBySlotId={
-                roomStates[roomIdForItem(item, floor) ?? `outside-rooms:${floor.id}`] ??
+                roomStates[roomIdForItem(item, floor) ?? outsideRoomsGroupId(floor.id)] ??
                 EMPTY_STATES
               }
               reducedMotion={reducedMotion}

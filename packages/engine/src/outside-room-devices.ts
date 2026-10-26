@@ -2,6 +2,9 @@ import { pointInsidePolygon } from "./geometry";
 import { deviceSlotForItem } from "./home-project/runtime";
 import type { HomeBindingManifest, RoomSpec } from "./types";
 
+/** Binding group id for a floor's devices outside every room. */
+export const outsideRoomsGroupId = (floorId: string) => `outside-rooms:${floorId}`;
+
 /** A device-list group only; never added to architectural floor rooms. */
 export function outsideRoomDevices(
   manifest: HomeBindingManifest,
@@ -22,7 +25,7 @@ export function outsideRoomDevices(
   });
   return devices.length
     ? {
-        id: `outside-rooms:${floorId}`,
+        id: outsideRoomsGroupId(floorId),
         name: "Outside rooms",
         // Non-spatial adapter for the existing room-based mapping components.
         polygon: [

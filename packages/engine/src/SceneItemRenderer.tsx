@@ -311,8 +311,9 @@ export const SceneItemRenderer = memo(function SceneItemRenderer({
         <MissingSceneItemFallback item={item} />
       </group>
     );
-  // Roomless items (for example outdoor lights) have no room-scoped binding.
-  // Their geometry still exists; absence of live state means disconnected.
+  // Unresolved items (unmapped, or before bindings load) keep their geometry;
+  // absence of live state means disconnected. Outdoor items resolve through the
+  // floor's outside-rooms group like room devices.
   const binding = resolvedDevice ?? {
     slot: deviceSlotForItem(item, floor),
     entities: [],

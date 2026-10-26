@@ -201,4 +201,44 @@ await withModules(async (load) => {
       await renderer.unmount();
     }
   });
+
+  test("an emitter outside every room follows its Home Assistant light", async () => {
+    const { manifest, room, profile, runtime } = lightGroupFixture(neutralDemoManifest);
+    globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+    const floor = manifest.floors[0];
+    const device = room.devices[0];
+    room.devices = room.devices.slice(1);
+    manifest.sceneItems = [
+      {
+        id: device.id,
+        kind: "device",
+        modelId: device.model,
+        floorId: floor.id,
+        size: stableDeviceRegistry[device.model].defaultSize,
+        placement: { kind: "absolute", at: [-5, -5], elevationMeters: 2.2, rotationYRadians: 0 },
+        entitySlots: device.entitySlots,
+      },
+    ];
+    const props = () => ({
+      floor,
+      resolvedBindings: resolveHomeAssistantBindings(manifest, profile, runtime),
+      deviceModels: stableDeviceRegistry,
+      extensionDeviceModels: {},
+      sceneItems: manifest.sceneItems,
+    });
+    const emitter = (renderer) =>
+      renderer.scene.findByProps({ name: `ha-device-light-${device.id}` }).instance;
+    const renderer = await create(React.createElement(HomeAssistantSceneLighting, props()));
+    try {
+      assert.equal(
+        emitter(renderer).intensity,
+        (stableDeviceRegistry[device.model].sceneLight.maxIntensity * 128) / 255,
+      );
+      runtime.entityStates["light.kitchen_pendants"].state = "off";
+      await renderer.update(React.createElement(HomeAssistantSceneLighting, props()));
+      assert.equal(emitter(renderer).intensity, 0);
+    } finally {
+      await renderer.unmount();
+    }
+  });
 });

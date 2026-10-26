@@ -2,6 +2,7 @@ import { useHaActionShortcuts } from "./action-bar/useHaActionShortcuts";
 import { resolvedRoomDisplayNames } from "./home-assistant-mapping/room-display-name";
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { useCabaneDom } from "./CabaneDom";
+import { deviceMappingRooms } from "./outside-room-devices";
 import { deriveFloorLevels, useFloorNavigation } from "./building";
 import { resolveOpeningPositions, type RetainedOpeningPositions } from "./opening-pose";
 import { useAdaptiveSceneQuality } from "./useAdaptiveSceneQuality";
@@ -138,7 +139,10 @@ export function useDashboardController({
     runtime.origin,
   );
   const selectedRoom = floor.rooms.find((room) => room.id === selectedRoomId);
-  const devicePanelRoom = floor.rooms.find((room) => room.id === devicePanelRoomId);
+  // The device panel also serves the floor's outside-rooms group (driveway, garden).
+  const devicePanelRoom = deviceMappingRooms(manifest, floor.id).find(
+    (room) => room.id === devicePanelRoomId,
+  );
   const deviceOverlay = selectedDeviceId !== null && devicePanelRoom !== undefined;
   const controlRoom = deviceOverlay ? devicePanelRoom : mode === "room" ? selectedRoom : undefined;
   const walkRoom = floor.rooms.find((room) => room.id === walkRoomId);

@@ -93,13 +93,15 @@ await withModules(async (load) => {
         coarsePointer: true,
         equippedToolId: null,
         walk: {},
-        setDevicePanelRoomId: noop,
+        setDevicePanelRoomId: (roomId) => {
+          read.devicePanelRoomId = roomId;
+        },
         setSelectedDeviceId,
         setSelectedRoomId: noop,
         setMode: noop,
         setMappingOpen: noop,
         setWalkDeviceTarget: noop,
-        walkDeviceTarget: null,
+        walkDeviceTarget: options.walkDeviceTarget ?? null,
         selectedDeviceId,
       });
       const resolvedDevice = Object.values(bindings.rooms)
@@ -110,6 +112,7 @@ await withModules(async (load) => {
         runtime: activeRuntime,
         resolvedDevice,
         interact: interaction.handleExtensionInteraction,
+        openWalkDevice: interaction.openWalkDevice,
       });
       return createElement(engine.SceneItemRenderer, {
         item,
@@ -214,6 +217,23 @@ await withModules(async (load) => {
       });
     });
   }
+
+  test("tapping a device outside every room opens its device panel", async () => {
+    await withLightScene({ outdoor: true }, async ({ read }) => {
+      await act(async () => read.interact({ id: deviceId, label: "Floor lamp" }));
+      assert.equal(read.selectedDeviceId, deviceId);
+      assert.equal(read.devicePanelRoomId, "outside-rooms:fixture-floor");
+    });
+  });
+
+  test("activating a device outside every room in Walk opens its device panel", async () => {
+    const walkDeviceTarget = { id: deviceId, label: "Floor lamp" };
+    await withLightScene({ outdoor: true, walkDeviceTarget }, async ({ read }) => {
+      await act(async () => read.openWalkDevice());
+      assert.equal(read.selectedDeviceId, deviceId);
+      assert.equal(read.devicePanelRoomId, "outside-rooms:fixture-floor");
+    });
+  });
 
   test("dragging, extra fingers, cancelled pointers, blur, Walk, and unmount stop held dimming", async (context) => {
     await withLightScene(
