@@ -87,3 +87,13 @@
   font-size: 0.52rem;
   line-height: 1.3;
 }
+
+/* Wall display at night: dim the whole screen so it does not light up a dark room. */
+.cabane-shell.wall-display-night::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1000;
+  background: rgb(0 0 0 / 38%);
+  pointer-events: none;
+}

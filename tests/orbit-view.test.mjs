@@ -124,6 +124,93 @@ await withModules(async (load) => {
     }
   });
 
+  test("an idle wall display returns to the remembered view and slowly turns around it", async () => {
+    const viewKey = orbitViewKey("wall-home", floor.id);
+    const props = { floor, viewKey, resetKey: 0, roomFrame: frame, reducedMotion: true };
+    const renderer = await create(createElement(OrbitCamera, props), options);
+    try {
+      const controls = controlsFor(renderer);
+      controls.dispatchEvent({ type: "start" });
+      controls.target.x += 2;
+      controls.object.position.x += 2;
+      controls.update();
+      const remembered = pose(controls);
+      await renderer.update(createElement(OrbitCamera, { ...props, room }));
+      assert.notDeepEqual(pose(controls), remembered);
+
+      await renderer.update(
+        createElement(OrbitCamera, { ...props, reducedMotion: false, ambient: true }),
+      );
+      close(pose(controls), remembered);
+      assert.equal(controls.autoRotate, true);
+      assert.ok(controls.autoRotateSpeed > 0 && controls.autoRotateSpeed <= 0.5, "slow turn");
+
+      await renderer.update(createElement(OrbitCamera, { ...props, reducedMotion: false }));
+      assert.equal(controls.autoRotate, false, "input ends the turn");
+      await renderer.update(createElement(OrbitCamera, { ...props, ambient: true }));
+      assert.equal(controls.autoRotate, false, "reduced motion keeps the display still");
+      assert.deepEqual(readOrbitView(viewKey).pose.target, remembered.slice(3, 6));
+    } finally {
+      await renderer.unmount();
+    }
+  });
+
+  test("a locked wall display returns to its locked view when someone touches it", async () => {
+    const viewKey = orbitViewKey("locked-wall-home", floor.id);
+    const props = { floor, viewKey, resetKey: 0, roomFrame: frame, locked: true };
+    const renderer = await create(createElement(OrbitCamera, props), options);
+    try {
+      const controls = controlsFor(renderer);
+      const locked = pose(controls);
+      await renderer.update(createElement(OrbitCamera, { ...props, ambient: true }));
+      // Stand in for the slow turn having moved the camera.
+      controls.object.position.x += 3;
+      controls.update();
+      assert.notDeepEqual(pose(controls), locked);
+      await renderer.update(createElement(OrbitCamera, props));
+      close(pose(controls), locked);
+    } finally {
+      await renderer.unmount();
+    }
+  });
+
+  test("the View menu offers a Wall display toggle that reports its state", async () => {
+    await withStorageDom(async ({ document }) => {
+      const root = createRoot(document.body);
+      const calls = [];
+      const props = {
+        locked: false,
+        wallDisplay: { enabled: true, onToggle: () => calls.push("wall") },
+        disabled: false,
+        onTopDown: undefined,
+        onResetView: undefined,
+        onToggleLock: undefined,
+        onClose: () => calls.push("close"),
+      };
+      try {
+        await act(async () => root.render(createElement(OrbitViewMenu, props)));
+        const toggle = document.querySelector('[aria-label="Wall display"]');
+        assert.equal(toggle.getAttribute("aria-pressed"), "true");
+        await act(async () => toggle.click());
+        assert.deepEqual(calls, ["wall", "close"]);
+        await act(async () =>
+          root.render(
+            createElement(OrbitViewMenu, {
+              ...props,
+              wallDisplay: { ...props.wallDisplay, enabled: false },
+            }),
+          ),
+        );
+        assert.equal(
+          document.querySelector('[aria-label="Wall display"]').getAttribute("aria-pressed"),
+          "false",
+        );
+      } finally {
+        await act(async () => root.unmount());
+      }
+    });
+  });
+
   test("View actions are accessible, camera buttons honor lock, and Walk disables view actions", async () => {
     await withStorageDom(async ({ document }) => {
       const root = createRoot(document.body);

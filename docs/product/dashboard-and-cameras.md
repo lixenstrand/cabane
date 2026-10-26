@@ -117,6 +117,15 @@ zoom, and compact camera buttons from moving it. Room and device selections keep
 their controls without reframing. Unlocking resumes manual camera navigation.
 These preferences do not restrict Construct, Arrange, Connect, or Walk cameras.
 
+Wall display, also in View, prepares a mounted screen. Like Lock view it is
+remembered per home in this browser only. After 30 seconds without pointer,
+wheel, touch or keyboard input it closes the device panel, camera viewer and
+room selection, returns to the remembered view, and turns the camera slowly
+until the next input; reduced motion keeps it still, and a locked view snaps
+back to its locked pose when touched. Walk, setup and mapping pause it. It asks
+the browser to keep the screen awake, and dims the screen while night lighting
+is active.
+
 In Home overview and room focus, a compact cream toolbar beside the floor picker
 provides zoom out, zoom in, and a 90° camera turn around the current orbit target.
 Zoom respects the existing camera limits. Buttons have 44px touch targets and

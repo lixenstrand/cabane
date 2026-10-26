@@ -224,11 +224,13 @@ export function SceneActionBar({
   weather,
   viewLocked = false,
   onToggleViewLock,
+  wallDisplay,
   onTopDown,
   onResetView,
 }: {
   viewLocked?: boolean;
   onToggleViewLock?: () => void;
+  wallDisplay?: { enabled: boolean; onToggle: () => void } | undefined;
   onTopDown?: () => void;
   onResetView?: () => void;
   weather?: WeatherMenuProps | undefined;
@@ -519,6 +521,7 @@ export function SceneActionBar({
                   onTopDown={onTopDown}
                   onResetView={onResetView}
                   onToggleLock={onToggleViewLock}
+                  wallDisplay={wallDisplay}
                   onClose={() => {
                     setOpen(null);
                     setOverflowOpen(false);
