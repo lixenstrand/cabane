@@ -143,7 +143,6 @@ await withModules(async (load) => {
       );
       close(pose(controls), remembered);
       assert.equal(controls.autoRotate, true);
-      assert.ok(controls.autoRotateSpeed > 0 && controls.autoRotateSpeed <= 0.5, "slow turn");
 
       await renderer.update(createElement(OrbitCamera, { ...props, reducedMotion: false }));
       assert.equal(controls.autoRotate, false, "input ends the turn");
@@ -153,6 +152,33 @@ await withModules(async (load) => {
     } finally {
       await renderer.unmount();
     }
+  });
+
+  test("the wall display turn keeps the same pace on slow and fast screens", async () => {
+    const turnOver2s = async (fps, home) => {
+      const props = {
+        floor,
+        viewKey: orbitViewKey(home, floor.id),
+        resetKey: 0,
+        roomFrame: frame,
+        reducedMotion: false,
+      };
+      const renderer = await create(createElement(OrbitCamera, props), options);
+      try {
+        await renderer.update(createElement(OrbitCamera, { ...props, ambient: true }));
+        const controls = controlsFor(renderer);
+        await renderer.advanceFrames(fps, 1 / fps);
+        const start = controls.getAzimuthalAngle();
+        await renderer.advanceFrames(2 * fps, 1 / fps);
+        return Math.abs(controls.getAzimuthalAngle() - start);
+      } finally {
+        await renderer.unmount();
+      }
+    };
+    const fast = await turnOver2s(60, "pace-fast-home");
+    const slow = await turnOver2s(10, "pace-slow-home");
+    assert.ok(fast > 0.05 && fast < 0.15, `one slow lap: ${fast} rad in 2 s`);
+    assert.ok(Math.abs(fast - slow) < fast * 0.05, `${slow} rad at 10 fps vs ${fast} at 60 fps`);
   });
 
   test("a locked wall display returns to its locked view when someone touches it", async () => {

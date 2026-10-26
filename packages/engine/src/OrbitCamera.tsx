@@ -9,7 +9,7 @@ import { deriveFloorLevels } from "./building/floor-levels";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { MapControls, OrthographicCamera } from "@react-three/drei";
 
-import { useThree } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 
 import { Spherical, Vector3, type OrthographicCamera as ThreeOrthographicCamera } from "three";
 
@@ -341,12 +341,17 @@ function OrbitCameraRig({
     restoreOverview();
     // The turn is not manual, so it never overwrites the remembered view.
     controls.autoRotate = !reducedMotion;
-    controls.autoRotateSpeed = 0.35;
     return () => {
       controls.autoRotate = false;
       if (isLocked()) restoreOverview();
     };
   }, [ambient, reducedMotion]);
+  // three-stdlib turns a fixed step per update, so scale it by frame time to keep
+  // one slow lap (~3 min) on slow tablets too. Runs before MapControls (-1).
+  useFrame((_state, delta) => {
+    const controls = orbitRef.current;
+    if (ambient && controls) controls.autoRotateSpeed = 0.35 * Math.min(delta, 0.25) * 60;
+  }, -2);
   const previousViewport = useRef({ width, height });
   useEffect(() => {
     const previous = previousViewport.current;
