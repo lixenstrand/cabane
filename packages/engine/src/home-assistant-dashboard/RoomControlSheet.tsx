@@ -17,7 +17,8 @@ export interface RoomControlSheetProps {
   cleaningAreaId?: string | undefined;
   homeId?: string;
   resolved: ResolvedRoomBindings;
-  roomStatus: RoomStatusSummary;
+  /** Absent for device groups such as Outside rooms, which are not HA areas. */
+  roomStatus?: RoomStatusSummary | undefined;
   status: HomeAssistantConnectionStatus;
   canMutate: boolean;
   selectedDeviceId: string | null;
@@ -366,12 +367,14 @@ export function RoomControlSheet({
                 {focused && <p>{resolved.displayName}</p>}
                 <h1>{selectedModule?.label ?? resolved.displayName}</h1>
               </div>
-              <RoomStatusBadges
-                summary={roomStatus}
-                variant="detailed"
-                className="room-control-sheet__status"
-                includeConnection
-              />
+              {roomStatus && (
+                <RoomStatusBadges
+                  summary={roomStatus}
+                  variant="detailed"
+                  className="room-control-sheet__status"
+                  includeConnection
+                />
+              )}
             </div>
           </header>
 

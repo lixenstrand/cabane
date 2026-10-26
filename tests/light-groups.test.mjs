@@ -171,6 +171,57 @@ await withModules(async (load) => {
     });
   });
 
+  test("a device panel opens for the Outside rooms group, which has no room status", async () => {
+    const { manifest, room, profile, runtime } = lightGroupFixture(neutralDemoManifest);
+    const floor = manifest.floors[0];
+    const device = room.devices[0];
+    room.devices = room.devices.slice(1);
+    manifest.sceneItems = [
+      {
+        id: device.id,
+        kind: "device",
+        modelId: device.model,
+        floorId: floor.id,
+        size: stableDeviceRegistry[device.model].defaultSize,
+        placement: { kind: "absolute", at: [-5, -5], elevationMeters: 2.2, rotationYRadians: 0 },
+        entitySlots: device.entitySlots,
+      },
+    ];
+    const outside = `outside-rooms:${floor.id}`;
+    await withStorageDom(async ({ document }) => {
+      const root = createRoot(document.body.appendChild(document.createElement("div")));
+      const resolved = resolveHomeAssistantBindings(manifest, profile, runtime);
+      try {
+        await act(async () =>
+          root.render(
+            React.createElement(RoomControlSheet, {
+              resolved: resolved.rooms[outside],
+              roomStatus: deriveRoomStatusMap(manifest, profile, resolved, runtime)[outside],
+              status: runtime.status,
+              canMutate: runtime.canMutate,
+              selectedDeviceId: device.id,
+              onSelectDevice() {},
+              onHome() {},
+              onWalk() {},
+              onConnectDevices() {},
+              onReconnect() {},
+              onRetry() {},
+              onCallService: async () => {},
+            }),
+          ),
+        );
+        assert.equal(document.querySelector(".room-module h2").textContent, "Kitchen pendants");
+        assert.equal(
+          document.querySelector('[aria-label*="not connected"]'),
+          null,
+          "a device group is not an unmapped room",
+        );
+      } finally {
+        await act(async () => root.unmount());
+      }
+    });
+  });
+
   test("three separate scene emitters follow the shared group's confirmed brightness and power", async () => {
     const { manifest, room, profile, runtime } = lightGroupFixture(neutralDemoManifest);
     globalThis.IS_REACT_ACT_ENVIRONMENT = true;
